@@ -1,0 +1,59 @@
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('.dropdown-menu').hide();
+
+        // Function to populate dropdown with city suggestions
+        function populateDropdown(data) {
+            let dropdownMenu = $('.dropdown-menu').html('');
+            dropdownMenu.empty(); // Clear previous options
+
+            //If data fetch is successful
+            if (data !== 500) {
+                data.forEach(function(suggestion) {
+                    let option = $('<a class="dropdown-item list-group-item" href="#">' + suggestion + '</a>');
+                    option.data('city', suggestion); // Store suggested city in data attribute
+                    dropdownMenu.append(option);
+                });
+
+                dropdownMenu.show(); // Show the dropdown
+                dropdownMenu.style.textAlign = "center";
+            } else {
+                console.log('Error Fetching UK cities');
+            }
+        }
+
+        // Fetch city data from the server and populate dropdown on input change
+        $('.city-autocomplete').on('input', function() {
+            let value = $(this).val().trim();
+            if (value !== '') {
+                //AJAX request to symfony route to fetch city suggestions
+                $.ajax({
+                    url: '/jquery/autocomplete/cities',
+                    dataType: 'json',
+                    data: {q: value},
+                    success: function(data) {
+                        populateDropdown(data); // Populate dropdown with suggestions
+                    },
+                });
+            } else {
+                // If input is empty, hide the dropdown
+                $('.city-autocomplete').siblings('.dropdown-menu').hide();
+            }
+        });
+
+        // If dropdown selected - fill the input + hide suggestions
+        $(document).on('click', '.dropdown-item', function(e) {
+            e.preventDefault();
+            $('.city-autocomplete').val($(this).text());
+            $(this).closest('.dropdown-menu').hide(); // Hide the dropdown
+        });
+
+        // Hide dropdown when clicking anywhere outside of it
+        $(document).on('click', function(event) {
+            if (!$(event.target).closest('.dropdown').length) {
+                $('.dropdown-menu').hide();
+            }
+        });
+    });
+</script>
